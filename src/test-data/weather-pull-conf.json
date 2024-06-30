@@ -1,0 +1,13 @@
+{
+    "targets": [
+      {
+        "city_name": "San Jose",
+        "zips": ["95124", "95014", "95123"]
+      },
+      {
+        "city_name": "Los Angeles",
+        "zips": ["90046", "90291"]
+      }
+    ],
+    "time_offsets": [4, 8, 12, 16, 20, 24]
+  }
