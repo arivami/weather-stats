@@ -48,7 +48,7 @@ use reqwest::Error;
  #[tokio::main]
 async fn main() -> Result<(), Error> {
 
-    let pull_conf :WeatherPullConf = load_config("/Users/mikez/Projects/weather-stats/src/test-data/weather-pull-conf.json".to_string());
+    let pull_conf :WeatherPullConf = load_config("test-data/weather-pull-conf.json".to_string());
 
     let targets = randomize_target_list(pull_conf);
 
@@ -69,7 +69,7 @@ async fn main() -> Result<(), Error> {
     ).collect();
 
 
-      let responses: Vec<Result<ResponseItem, Error>> = futures::future::join_all(
+    let responses: Vec<Result<ResponseItem, Error>> = futures::future::join_all(
         requests.into_iter().map(|x| {
             async move {
                 let response = reqwest::get(x.url).await?;
@@ -81,20 +81,21 @@ async fn main() -> Result<(), Error> {
         })
     ).await;
 
- for response in responses {
-    match response {
-        Ok(ri) => {
-            println!("City:{}", ri.weather.name);
-            println!("Zip:{}", ri.zip);
-            println!("Temperature: {}", ri.weather.main.temp);
-            println!("Weather: {}", ri.weather.weather[0].description);
-            println!("Humidity: {}%", ri.weather.main.humidity);
-            println!("Wind Speed: {} m/s", ri.weather.wind.speed);
-            println!();
-        },
-        Err(e) => println!("Error: {}", e),
+    for response in responses {
+        match response {
+            Ok(ri) => {
+                println!("City:{}", ri.weather.name);
+                println!("Zip:{}", ri.zip);
+                println!("Temperature: {}", ri.weather.main.temp);
+                println!("Weather: {}", ri.weather.weather[0].description);
+                println!("Humidity: {}%", ri.weather.main.humidity);
+                println!("Wind Speed: {} m/s", ri.weather.wind.speed);
+                println!();
+            },
+            Err(e) => println!("Error: {}", e),
+        }
     }
-}
+
 
     
 
