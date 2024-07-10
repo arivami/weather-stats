@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Env Variables
-export $(grep -v '^#' .env | xargs)
+export $(grep -v '^#' ../.env.example | xargs)
+DOCKERFILE="../Dockerfile"
 
 # Define the network and container names
 NETWORK="my-net"
@@ -46,8 +47,9 @@ docker run -d --network=$NETWORK --name mysql-container \
 
 # Run app container
 echo "Running App"
-docker run -it --network=$NETWORK --name $APP_CONTAINER_NAME $IMAGE_NAME \
+docker run -it --network=$NETWORK --name $APP_CONTAINER_NAME  \
     -e DB_HOST=$MYSQL_CONTAINER_NAME \
     -e DB_USER=$DB_USER \
     -e DB_PASS=$DB_PASS \
-    -e DB_NAME=$DB_NAME
+    -e DB_NAME=$DB_NAME \
+    $IMAGE_NAME
