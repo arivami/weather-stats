@@ -37,7 +37,6 @@ async fn main() -> Result<(), Error> {
  mod openweathermap;
  mod config;
  use std::env;
- use dotenvy::dotenv;
 
  use config::config::{load_config, randomize_target_list, WeatherPullConf};
  
@@ -88,7 +87,6 @@ async fn main() -> Result<(), AppError> {
 
     let targets = randomize_target_list(pull_conf);
 
-    dotenv().expect(".env file not found");
 
     let mysql_host = env::var("DB_HOST").expect("DB_HOST not set");
     let mysql_user = env::var("DB_USER").expect("MYSQL_USER not set");
