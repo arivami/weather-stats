@@ -1,7 +1,8 @@
 
 pub mod helper_funcs{
     
-    pub fn do_nothing() {
-        println!("hello");
-    }
+    // pub fn do_nothing() {
+    //     println!("hello");
+    // }
 }
+

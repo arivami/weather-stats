@@ -36,21 +36,65 @@ async fn main() -> Result<(), Error> {
  mod utils;
  mod openweathermap;
  mod config;
+ use std::env;
 
  use config::config::{load_config, randomize_target_list, WeatherPullConf};
  
  use openweathermap::open_weather_data::ResponseItem;
 use reqwest::Error;
- //use futures::future::join_all;
- use crate::openweathermap::open_weather_data::{Weather,APIRequestParams,WorkList};
+//use futures::future::join_all;
+use crate::openweathermap::open_weather_data::{Weather,APIRequestParams,WorkList};
+
+use sqlx::{MySqlPool, mysql::MySqlQueryResult};
+
+#[derive(Debug)]
+struct WeatherData {
+    city: String,
+    zip: String,
+    temperature: f64,
+    weather: String,
+    humidity: String,
+    wind_speed: f64,
+}
+
+#[derive(Debug)]
+enum AppError {
+    DatabaseError(sqlx::Error),
+    HttpRequestError(reqwest::Error),
+    // Other errors...
+}
+
+impl From<sqlx::Error> for AppError {
+    fn from(err: sqlx::Error) -> Self {
+        AppError::DatabaseError(err)
+    }
+}
+
+impl From<reqwest::Error> for AppError {
+    fn from(err: reqwest::Error) -> Self {
+        AppError::HttpRequestError(err)
+    }
+}
 
 
  #[tokio::main]
-async fn main() -> Result<(), Error> {
+async fn main() -> Result<(), AppError> {
 
-    let pull_conf :WeatherPullConf = load_config("test-data/weather-pull-conf.json".to_string());
+    let current_dir = env::current_dir().unwrap();
+    //println!("Current directory: {}", current_dir.display());
+
+    let pull_conf :WeatherPullConf = load_config("src/test-data/weather-pull-conf.json".to_string());
 
     let targets = randomize_target_list(pull_conf);
+
+    let database_url = "mysql://root:password@localhost/zips";
+
+    // collection of WeatherData structs
+    let mut data_list: Vec<WeatherData> = Vec::new();
+
+
+    // Create a connection pool
+    let pool = MySqlPool::connect(database_url).await?;
 
     let requests: Vec<WorkList> = targets.iter().map(|x|
         {
@@ -91,14 +135,85 @@ async fn main() -> Result<(), Error> {
                 println!("Humidity: {}%", ri.weather.main.humidity);
                 println!("Wind Speed: {} m/s", ri.weather.wind.speed);
                 println!();
+
+                let data = WeatherData {
+                    zip: ri.zip,
+                    city: ri.weather.name,
+                    temperature: ri.weather.main.temp,
+                    weather: ri.weather.weather[0].description.clone(),
+                    humidity: format!("{}%", ri.weather.main.humidity),
+                    wind_speed: ri.weather.wind.speed,
+                };
+                data_list.push(data);
             },
             Err(e) => println!("Error: {}", e),
         }
     }
 
 
+    for data in data_list {
+        
+        
+        create_table_if_not_exists(&pool, &data.zip).await?;
+        insert_weather_data(&pool, &data).await?;
+    }
+
+    
     
 
 
     Ok(())
+}
+
+
+
+async fn create_table_if_not_exists(pool: &MySqlPool, zip: &str) -> Result<MySqlQueryResult, AppError> {
+    // Check if table exists
+    let table_exists: bool = sqlx::query_scalar(
+        "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ?)",
+    )
+    .bind(format!("weather_data_{}", zip))
+    .fetch_one(pool)
+    .await?;
+
+    if !table_exists {
+        // Create the table
+        sqlx::query(&format!(
+            r#"
+            CREATE TABLE weather_data_{} (
+                id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                city VARCHAR(255) NOT NULL,
+                temperature FLOAT NOT NULL,
+                weather VARCHAR(255) NOT NULL,
+                humidity VARCHAR(255) NOT NULL,
+                wind_speed FLOAT NOT NULL,
+                measurement_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            "#,
+            zip
+        ))
+        .execute(pool)
+        .await?;
+    }
+
+    Ok(MySqlQueryResult::default())
+}
+
+async fn insert_weather_data(pool: &MySqlPool, data: &WeatherData) -> Result<MySqlQueryResult, AppError> {
+    // Insert data into the corresponding table
+    sqlx::query(
+        &format!(
+            "INSERT INTO weather_data_{} (city, temperature, weather, humidity, wind_speed) VALUES (?, ?, ?, ?, ?)",
+            data.zip
+        )
+    )
+    .bind(&data.city)
+    .bind(data.temperature)
+    .bind(&data.weather)
+    .bind(&data.humidity)
+    .bind(data.wind_speed)
+    .execute(pool)
+    .await?;
+
+    Ok(MySqlQueryResult::default())
 }
