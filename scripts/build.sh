@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Env Variables
-export $(grep -v '^#' ../.env.example | xargs)
+export $(grep -v '^#' ../.env | xargs)
 DOCKERFILE="../Dockerfile"
 
 # Define the network and container names
