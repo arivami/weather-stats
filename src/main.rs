@@ -37,6 +37,7 @@ async fn main() -> Result<(), Error> {
  mod openweathermap;
  mod config;
  use std::env;
+ use dotenvy::dotenv;
 
  use config::config::{load_config, randomize_target_list, WeatherPullConf};
  
@@ -87,14 +88,23 @@ async fn main() -> Result<(), AppError> {
 
     let targets = randomize_target_list(pull_conf);
 
-    let database_url = "mysql://root:password@mysql-container/my_database";
+    dotenv().expect(".env file not found");
+
+    let mysql_host = env::var("DB_HOST").expect("DB_HOST not set");
+    let mysql_user = env::var("DB_USER").expect("MYSQL_USER not set");
+    let mysql_password = env::var("DB_PASS").expect("DB_PASS not set");
+    let mysql_database = env::var("DB_NAME").expect("DB_NAME not set");
+
+    // Construct the MySQL connection URL
+    let database_url = format!("mysql://{}:{}@{}/{}", mysql_user, mysql_password, mysql_host, mysql_database);
+
 
     // collection of WeatherData structs
     let mut data_list: Vec<WeatherData> = Vec::new();
 
 
     // Create a connection pool
-    let pool = MySqlPool::connect(database_url).await?;
+    let pool = MySqlPool::connect(&database_url).await?;
 
     let requests: Vec<WorkList> = targets.iter().map(|x|
         {
