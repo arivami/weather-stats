@@ -42,10 +42,12 @@ async fn main() -> Result<(), Error> {
  
  use openweathermap::open_weather_data::ResponseItem;
 use reqwest::Error;
+use sea_orm::DatabaseConnection;
 //use futures::future::join_all;
 use crate::openweathermap::open_weather_data::{Weather,APIRequestParams,WorkList};
 
 use sqlx::{MySqlPool, mysql::MySqlQueryResult};
+use sea_orm::Database;
 
 #[derive(Debug)]
 struct WeatherData {
@@ -102,7 +104,8 @@ async fn main() -> Result<(), AppError> {
 
 
     // Create a connection pool
-    let pool = MySqlPool::connect(&database_url).await?;
+    //let pool = MySqlPool::connect(&database_url).await?;
+    let db: DatabaseConnection = Database::connect(&database_url).await?;
 
     let requests: Vec<WorkList> = targets.iter().map(|x|
         {
