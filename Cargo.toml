@@ -24,3 +24,4 @@ rand = "0.8"
 futures = "0.3"
 dotenvy = "0.15.7"
 sqlx = { version = "0.6", features = ["mysql", "runtime-tokio-native-tls"] }
+sea-orm = { version = "0.12", features = [ "sqlx-mysql", "runtime-async-std-native-tls", "macros" ] }
