@@ -87,14 +87,22 @@ async fn main() -> Result<(), AppError> {
 
     let targets = randomize_target_list(pull_conf);
 
-    let database_url = "mysql://root:password@localhost/zips";
+
+    let mysql_host = env::var("DB_HOST").expect("DB_HOST not set");
+    let mysql_user = env::var("DB_USER").expect("MYSQL_USER not set");
+    let mysql_password = env::var("DB_PASS").expect("DB_PASS not set");
+    let mysql_database = env::var("DB_NAME").expect("DB_NAME not set");
+
+    // Construct the MySQL connection URL
+    let database_url = format!("mysql://{}:{}@{}/{}", mysql_user, mysql_password, mysql_host, mysql_database);
+
 
     // collection of WeatherData structs
     let mut data_list: Vec<WeatherData> = Vec::new();
 
 
     // Create a connection pool
-    let pool = MySqlPool::connect(database_url).await?;
+    let pool = MySqlPool::connect(&database_url).await?;
 
     let requests: Vec<WorkList> = targets.iter().map(|x|
         {
@@ -154,7 +162,7 @@ async fn main() -> Result<(), AppError> {
     for data in data_list {
         
         
-        create_table_if_not_exists(&pool, &data.zip).await?;
+        create_table_if_not_exists(&pool).await?;
         insert_weather_data(&pool, &data).await?;
     }
 
@@ -167,21 +175,22 @@ async fn main() -> Result<(), AppError> {
 
 
 
-async fn create_table_if_not_exists(pool: &MySqlPool, zip: &str) -> Result<MySqlQueryResult, AppError> {
+async fn create_table_if_not_exists(pool: &MySqlPool) -> Result<MySqlQueryResult, AppError> {
     // Check if table exists
     let table_exists: bool = sqlx::query_scalar(
         "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ?)",
     )
-    .bind(format!("weather_data_{}", zip))
+    .bind("weather_data")
     .fetch_one(pool)
     .await?;
 
     if !table_exists {
         // Create the table
-        sqlx::query(&format!(
+        sqlx::query(
             r#"
-            CREATE TABLE weather_data_{} (
+            CREATE TABLE weather_data (
                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                zip VARCHAR(255) NOT NULL,
                 city VARCHAR(255) NOT NULL,
                 temperature FLOAT NOT NULL,
                 weather VARCHAR(255) NOT NULL,
@@ -189,9 +198,8 @@ async fn create_table_if_not_exists(pool: &MySqlPool, zip: &str) -> Result<MySql
                 wind_speed FLOAT NOT NULL,
                 measurement_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-            "#,
-            zip
-        ))
+            "#
+        )
         .execute(pool)
         .await?;
     }
@@ -203,10 +211,10 @@ async fn insert_weather_data(pool: &MySqlPool, data: &WeatherData) -> Result<MyS
     // Insert data into the corresponding table
     sqlx::query(
         &format!(
-            "INSERT INTO weather_data_{} (city, temperature, weather, humidity, wind_speed) VALUES (?, ?, ?, ?, ?)",
-            data.zip
+            "INSERT INTO weather_data (zip, city, temperature, weather, humidity, wind_speed) VALUES (?, ?, ?, ?, ?, ?)"
         )
     )
+    .bind(&data.zip)
     .bind(&data.city)
     .bind(data.temperature)
     .bind(&data.weather)
