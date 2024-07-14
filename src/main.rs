@@ -36,16 +36,21 @@ async fn main() -> Result<(), Error> {
  mod utils;
  mod openweathermap;
  mod config;
+ mod weather_data;
  use std::env;
 
  use config::config::{load_config, randomize_target_list, WeatherPullConf};
  
  use openweathermap::open_weather_data::ResponseItem;
 use reqwest::Error;
+use sea_orm::DatabaseConnection;
 //use futures::future::join_all;
 use crate::openweathermap::open_weather_data::{Weather,APIRequestParams,WorkList};
 
 use sqlx::{MySqlPool, mysql::MySqlQueryResult};
+use sea_orm::Database;
+use sea_orm::ActiveValue::{Set, NotSet, Unchanged};
+use sea_orm::ActiveModelTrait;
 
 #[derive(Debug)]
 struct WeatherData {
@@ -59,21 +64,29 @@ struct WeatherData {
 
 #[derive(Debug)]
 enum AppError {
-    DatabaseError(sqlx::Error),
+    //DatabaseError(sqlx::Error),
     HttpRequestError(reqwest::Error),
+    DatabaseError(sea_orm::DbErr),
     // Other errors...
 }
 
-impl From<sqlx::Error> for AppError {
-    fn from(err: sqlx::Error) -> Self {
-        AppError::DatabaseError(err)
-    }
-}
+// impl From<sqlx::Error> for AppError {
+//     fn from(err: sqlx::Error) -> Self {
+//         AppError::DatabaseError(err)
+//     }
+// }
 
 impl From<reqwest::Error> for AppError {
     fn from(err: reqwest::Error) -> Self {
         AppError::HttpRequestError(err)
     }
+}
+
+impl From<sea_orm::DbErr> for AppError {
+    fn from(err: sea_orm::DbErr) -> Self {
+        AppError::DatabaseError(err)
+    }
+    
 }
 
 
@@ -102,7 +115,8 @@ async fn main() -> Result<(), AppError> {
 
 
     // Create a connection pool
-    let pool = MySqlPool::connect(&database_url).await?;
+    //let pool = MySqlPool::connect(&database_url).await?;
+    let db: DatabaseConnection = Database::connect(&database_url).await?;
 
     let requests: Vec<WorkList> = targets.iter().map(|x|
         {
@@ -162,8 +176,8 @@ async fn main() -> Result<(), AppError> {
     for data in data_list {
         
         
-        create_table_if_not_exists(&pool).await?;
-        insert_weather_data(&pool, &data).await?;
+        //create_table_if_not_exists(&pool).await?;
+        insert_weather_data(&db, &data).await?;
     }
 
     
@@ -175,53 +189,72 @@ async fn main() -> Result<(), AppError> {
 
 
 
-async fn create_table_if_not_exists(pool: &MySqlPool) -> Result<MySqlQueryResult, AppError> {
-    // Check if table exists
-    let table_exists: bool = sqlx::query_scalar(
-        "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ?)",
-    )
-    .bind("weather_data")
-    .fetch_one(pool)
-    .await?;
+// async fn create_table_if_not_exists(pool: &MySqlPool) -> Result<MySqlQueryResult, AppError> {
+//     // Check if table exists
+//     let table_exists: bool = sqlx::query_scalar(
+//         "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ?)",
+//     )
+//     .bind("weather_data")
+//     .fetch_one(pool)
+//     .await?;
 
-    if !table_exists {
-        // Create the table
-        sqlx::query(
-            r#"
-            CREATE TABLE weather_data (
-                id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                zip VARCHAR(255) NOT NULL,
-                city VARCHAR(255) NOT NULL,
-                temperature FLOAT NOT NULL,
-                weather VARCHAR(255) NOT NULL,
-                humidity VARCHAR(255) NOT NULL,
-                wind_speed FLOAT NOT NULL,
-                measurement_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            "#
-        )
-        .execute(pool)
-        .await?;
-    }
+//     if !table_exists {
+//         // Create the table
+//         sqlx::query(
+//             r#"
+//             CREATE TABLE weather_data (
+//                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
+//                 zip VARCHAR(255) NOT NULL,
+//                 city VARCHAR(255) NOT NULL,
+//                 temperature FLOAT NOT NULL,
+//                 weather VARCHAR(255) NOT NULL,
+//                 humidity VARCHAR(255) NOT NULL,
+//                 wind_speed FLOAT NOT NULL,
+//                 measurement_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+//             )
+//             "#
+//         )
+//         .execute(pool)
+//         .await?;
+//     }
+//
+//     Ok(MySqlQueryResult::default())
+// }
 
-    Ok(MySqlQueryResult::default())
-}
+// async fn insert_weather_data(pool: &MySqlPool, data: &WeatherData) -> Result<MySqlQueryResult, AppError> {
+//     // Insert data into the corresponding table
+//     sqlx::query(
+//         &format!(
+//             "INSERT INTO weather_data (zip, city, temperature, weather, humidity, wind_speed) VALUES (?, ?, ?, ?, ?, ?)"
+//         )
+//     )
+//     .bind(&data.zip)
+//     .bind(&data.city)
+//     .bind(data.temperature)
+//     .bind(&data.weather)
+//     .bind(&data.humidity)
+//     .bind(data.wind_speed)
+//     .execute(pool)
+//     .await?;
 
-async fn insert_weather_data(pool: &MySqlPool, data: &WeatherData) -> Result<MySqlQueryResult, AppError> {
-    // Insert data into the corresponding table
-    sqlx::query(
-        &format!(
-            "INSERT INTO weather_data (zip, city, temperature, weather, humidity, wind_speed) VALUES (?, ?, ?, ?, ?, ?)"
-        )
-    )
-    .bind(&data.zip)
-    .bind(&data.city)
-    .bind(data.temperature)
-    .bind(&data.weather)
-    .bind(&data.humidity)
-    .bind(data.wind_speed)
-    .execute(pool)
-    .await?;
+//     Ok(MySqlQueryResult::default())
+// }
 
-    Ok(MySqlQueryResult::default())
+async fn insert_weather_data(db: &DatabaseConnection, data: &WeatherData) -> Result<(), AppError>{
+    let current_weather = weather_data::ActiveModel {
+        zip: Set(data.zip.clone()),
+        city: Set(data.city.clone()),
+        temperature: Set(data.temperature),
+        weather: Set(data.weather.clone()),
+        humidity: Set(data.humidity.clone()),
+        wind_speed: Set(data.wind_speed),
+        ..Default::default()
+    };
+
+    println!("Inserting data into the database...");
+    current_weather.insert(db).await?;
+    println!("Data inserted successfully");
+
+
+    Ok(())
 }
