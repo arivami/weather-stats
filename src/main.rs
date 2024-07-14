@@ -251,6 +251,10 @@ async fn insert_weather_data(db: &DatabaseConnection, data: &WeatherData) -> Res
         ..Default::default()
     };
 
+    println!("Inserting data into the database...");
     current_weather.insert(db).await?;
+    println!("Data inserted successfully");
+
+
     Ok(())
 }
