@@ -11,7 +11,7 @@ APP_CONTAINER_NAME=app-container
 
 # Stop and remove previous containers
 echo "Removing old network and containers..."
-docker stop $MYSQL_CONTAINER_NAME $MYSQL_CONTAINER_NAME
+docker stop $MYSQL_CONTAINER_NAME $APP_CONTAINER_NAME
 docker rm $MYSQL_CONTAINER_NAME $APP_CONTAINER_NAME
 
 # Remove the previous network
@@ -43,6 +43,7 @@ echo "Running DB"
 docker run -d --network=$NETWORK --name mysql-container \
     -e MYSQL_ROOT_PASSWORD=$DB_PASS \
     -e MYSQL_DATABASE=$DB_NAME\
+    -v $(pwd)/init.sql:/docker-entrypoint-initdb.d/init.sql \
     mysql:latest
 
 # Run app container
