@@ -2,7 +2,7 @@
 
 # Env Variables
 export $(grep -v '^#' ../.env | xargs)
-DOCKERFILE="../Dockerfile"
+DOCKERFILE="../DockerfileMulti"
 
 # Define the network and container names
 NETWORK="my-net"
@@ -53,4 +53,5 @@ docker run -it --network=$NETWORK --name $APP_CONTAINER_NAME  \
     -e DB_USER=$DB_USER \
     -e DB_PASS=$DB_PASS \
     -e DB_NAME=$DB_NAME \
+    -e API_KEY=$API_KEY \
     $IMAGE_NAME
