@@ -56,7 +56,7 @@ async fn main() -> Result<(), AppError> {
     let current_dir = env::current_dir().unwrap();
     //println!("Current directory: {}", current_dir.display());
 
-    let pull_conf :WeatherPullConf = load_config("src/test-data/weather-pull-conf.json".to_string());
+    let pull_conf :WeatherPullConf = load_config("weather-pull-conf.json".to_string());
 
     let targets = randomize_target_list(pull_conf);
 
