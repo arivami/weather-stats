@@ -1,42 +1,7 @@
 
-
-
-/* use lambda_http::{run, service_fn, tracing, Body, Error, Request, RequestExt, Response};
-
-/// This is the main body for the function.
-/// Write your code inside it.
-/// There are some code example in the following URLs:
-/// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
-async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
-    // Extract some useful information from the request
-    let who = event
-        .query_string_parameters_ref()
-        .and_then(|params| params.first("name"))
-        .unwrap_or("world");
-    let message = format!("Hello {who}, this is an AWS Lambda HTTP request");
-
-    // Return something that implements IntoResponse.
-    // It will be serialized to the right response event automatically by the runtime
-    let resp = Response::builder()
-        .status(200)
-        .header("content-type", "text/html")
-        .body(message.into())
-        .map_err(Box::new)?;
-    Ok(resp)
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Error> {
-    tracing::init_default_subscriber();
-    
-    run(service_fn(function_handler)).await
-}
- */
-
  mod utils;
  mod openweathermap;
  mod config;
- mod weather_data;
  use std::env;
 
  use config::config::{load_config, randomize_target_list, WeatherPullConf};
@@ -52,15 +17,10 @@ use sea_orm::Database;
 use sea_orm::ActiveValue::{Set, NotSet, Unchanged};
 use sea_orm::ActiveModelTrait;
 
-#[derive(Debug)]
-struct WeatherData {
-    city: String,
-    zip: String,
-    temperature: f64,
-    weather: String,
-    humidity: String,
-    wind_speed: f64,
-}
+mod models;
+
+use models::weather_str::WeatherData;
+use models::weather_data::weather_data;
 
 #[derive(Debug)]
 enum AppError {
@@ -105,13 +65,14 @@ async fn main() -> Result<(), AppError> {
     let mysql_user = env::var("DB_USER").expect("MYSQL_USER not set");
     let mysql_password = env::var("DB_PASS").expect("DB_PASS not set");
     let mysql_database = env::var("DB_NAME").expect("DB_NAME not set");
+    let api_key: String = env::var("API_KEY").expect("API_KEY not set");
 
     // Construct the MySQL connection URL
     let database_url = format!("mysql://{}:{}@{}/{}", mysql_user, mysql_password, mysql_host, mysql_database);
 
 
     // collection of WeatherData structs
-    let mut data_list: Vec<WeatherData> = Vec::new();
+    // let mut data_list: Vec<WeatherData> = Vec::new();
 
 
     // Create a connection pool
@@ -122,7 +83,7 @@ async fn main() -> Result<(), AppError> {
         {
             let request_params = APIRequestParams{
                 zip: x.to_string(),
-                api_key:"5ffce5e80bb83c6f974df8aeb9542960".to_string(),
+                api_key:api_key,
                 unit:"imperial".to_string()
 
                 };
@@ -158,27 +119,28 @@ async fn main() -> Result<(), AppError> {
                 println!("Wind Speed: {} m/s", ri.weather.wind.speed);
                 println!();
 
-                let data = WeatherData {
-                    zip: ri.zip,
-                    city: ri.weather.name,
-                    temperature: ri.weather.main.temp,
-                    weather: ri.weather.weather[0].description.clone(),
-                    humidity: format!("{}%", ri.weather.main.humidity),
-                    wind_speed: ri.weather.wind.speed,
-                };
-                data_list.push(data);
+
+                let data = WeatherData::new(
+                    ri.weather.name,
+                    ri.zip,
+                    ri.weather.main.temp,
+                    ri.weather.weather[0].description.clone(),
+                    format!("{}%", ri.weather.main.humidity),
+                    ri.weather.wind.speed
+                );
+
+                insert_weather_data(&db, &data).await?;
+                
+                // data_list.push(data);
             },
             Err(e) => println!("Error: {}", e),
         }
     }
 
 
-    for data in data_list {
-        
-        
-        //create_table_if_not_exists(&pool).await?;
-        insert_weather_data(&db, &data).await?;
-    }
+    // for data in data_list {
+    //     insert_weather_data(&db, &data).await?;
+    // }
 
     
     
@@ -189,68 +151,10 @@ async fn main() -> Result<(), AppError> {
 
 
 
-// async fn create_table_if_not_exists(pool: &MySqlPool) -> Result<MySqlQueryResult, AppError> {
-//     // Check if table exists
-//     let table_exists: bool = sqlx::query_scalar(
-//         "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ?)",
-//     )
-//     .bind("weather_data")
-//     .fetch_one(pool)
-//     .await?;
-
-//     if !table_exists {
-//         // Create the table
-//         sqlx::query(
-//             r#"
-//             CREATE TABLE weather_data (
-//                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
-//                 zip VARCHAR(255) NOT NULL,
-//                 city VARCHAR(255) NOT NULL,
-//                 temperature FLOAT NOT NULL,
-//                 weather VARCHAR(255) NOT NULL,
-//                 humidity VARCHAR(255) NOT NULL,
-//                 wind_speed FLOAT NOT NULL,
-//                 measurement_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-//             )
-//             "#
-//         )
-//         .execute(pool)
-//         .await?;
-//     }
-//
-//     Ok(MySqlQueryResult::default())
-// }
-
-// async fn insert_weather_data(pool: &MySqlPool, data: &WeatherData) -> Result<MySqlQueryResult, AppError> {
-//     // Insert data into the corresponding table
-//     sqlx::query(
-//         &format!(
-//             "INSERT INTO weather_data (zip, city, temperature, weather, humidity, wind_speed) VALUES (?, ?, ?, ?, ?, ?)"
-//         )
-//     )
-//     .bind(&data.zip)
-//     .bind(&data.city)
-//     .bind(data.temperature)
-//     .bind(&data.weather)
-//     .bind(&data.humidity)
-//     .bind(data.wind_speed)
-//     .execute(pool)
-//     .await?;
-
-//     Ok(MySqlQueryResult::default())
-// }
 
 async fn insert_weather_data(db: &DatabaseConnection, data: &WeatherData) -> Result<(), AppError>{
-    let current_weather = weather_data::ActiveModel {
-        zip: Set(data.zip.clone()),
-        city: Set(data.city.clone()),
-        temperature: Set(data.temperature),
-        weather: Set(data.weather.clone()),
-        humidity: Set(data.humidity.clone()),
-        wind_speed: Set(data.wind_speed),
-        ..Default::default()
-    };
-
+    let current_weather: weather_data::ActiveModel = data.into();
+    
     println!("Inserting data into the database...");
     current_weather.insert(db).await?;
     println!("Data inserted successfully");
