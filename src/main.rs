@@ -153,7 +153,15 @@ async fn main() -> Result<(), AppError> {
 
 
 async fn insert_weather_data(db: &DatabaseConnection, data: &WeatherData) -> Result<(), AppError>{
-    let current_weather: weather_data::ActiveModel = data.into();
+    let current_weather: weather_data::ActiveModel = weather_data::ActiveModel {
+        city: Set(data.city.clone()),
+        zip: Set(data.zip.clone()),
+        temperature: Set(data.temperature),
+        weather: Set(data.weather.clone()),
+        humidity: Set(data.humidity.clone()),
+        wind_speed: Set(data.wind_speed),
+        ..Default::default()
+    };
     
     println!("Inserting data into the database...");
     current_weather.insert(db).await?;
