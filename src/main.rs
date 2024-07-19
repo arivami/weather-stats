@@ -20,7 +20,7 @@ use sea_orm::ActiveModelTrait;
 mod models;
 
 use models::weather_str::WeatherData;
-use models::weather_data::weather_data;
+use models::weather_data;
 
 #[derive(Debug)]
 enum AppError {
@@ -83,7 +83,7 @@ async fn main() -> Result<(), AppError> {
         {
             let request_params = APIRequestParams{
                 zip: x.to_string(),
-                api_key:api_key,
+                api_key:api_key.clone(),
                 unit:"imperial".to_string()
 
                 };
