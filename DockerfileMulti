@@ -11,13 +11,16 @@ COPY . /workspace
 RUN cargo build --release
 
 # Stage 2: Create the final image
-FROM debian:buster-slim
+FROM  rust:latest
 
 # Set the working directory
 WORKDIR /workspace
 
 # Copy the compiled binary from the builder stage
-COPY --from=builder /workspace/target/release/ .
+COPY --from=builder /workspace/target/release/weather-stats .
+
+# Copy the test data file
+COPY --from=builder /workspace/src/test-data/weather-pull-conf.json .
 
 # Command to run the binary
 CMD ["./weather-stats"]
