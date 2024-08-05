@@ -69,7 +69,6 @@ async fn main() -> Result<(), AppError> {
 
     // Construct the MySQL connection URL
     let database_url = format!("mysql://{}:{}@{}/{}", mysql_user, mysql_password, mysql_host, mysql_database);
-    println!("{}",database_url);
     // mysql://admin:password@weather-results.cz6gyqqeadbq.us-east-2.rds.amazonaws.com/weather
 
 
