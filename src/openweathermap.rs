@@ -40,6 +40,7 @@ pub mod open_weather_data {
         pub unit: String,
     }
 
+    #[derive(Debug)]
     pub struct ResponseItem{
         pub zip:String,
         pub weather:Weather,

@@ -104,6 +104,7 @@ async fn main() -> Result<(), AppError> {
                 let resp_item: ResponseItem= ResponseItem{
                     zip:x.zip.to_lowercase(), weather: response.json().await?,
                 };
+                println!("Response: {:?}", resp_item);
                 Ok(resp_item)
             }
         })
