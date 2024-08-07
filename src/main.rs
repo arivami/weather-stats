@@ -111,6 +111,7 @@ async fn main() -> Result<(), AppError> {
             }
         })
     ).await;
+    print!("Finished API call");
 
     for response in responses {
         match response {
