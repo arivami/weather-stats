@@ -80,6 +80,7 @@ async fn main() -> Result<(), AppError> {
     //let pool = MySqlPool::connect(&database_url).await?;
     let db: DatabaseConnection = Database::connect(&database_url).await?;
 
+    println!("Starting API call");
     let requests: Vec<WorkList> = targets.iter().map(|x|
         {
             let request_params = APIRequestParams{
@@ -100,6 +101,7 @@ async fn main() -> Result<(), AppError> {
     let responses: Vec<Result<ResponseItem, Error>> = futures::future::join_all(
         requests.into_iter().map(|x| {
             async move {
+                println!("Requesting: {}", x.url);
                 let response = reqwest::get(x.url).await?;
                 let resp_item: ResponseItem= ResponseItem{
                     zip:x.zip.to_lowercase(), weather: response.json().await?,
