@@ -1,40 +1,41 @@
 
- mod utils;
- mod openweathermap;
- mod config;
- use std::env;
+mod utils;
 
- use config::config::{load_config, randomize_target_list, WeatherPullConf};
- 
- use openweathermap::open_weather_data::ResponseItem;
-use reqwest::Error;
-use sea_orm::DatabaseConnection;
-//use futures::future::join_all;
-use crate::openweathermap::open_weather_data::{Weather,APIRequestParams,WorkList};
+mod openweathermap;
+use openweathermap::open_weather_data::ResponseItem;
+use crate::openweathermap::open_weather_data::{APIRequestParams,WorkList};
 
-use sqlx::{MySqlPool, mysql::MySqlQueryResult};
-use sea_orm::Database;
-use sea_orm::ActiveValue::{Set, NotSet, Unchanged};
-use sea_orm::ActiveModelTrait;
+
+mod config;
+use config::config::{load_config, randomize_target_list, WeatherPullConf};
 
 mod models;
-
 use models::weather_str::WeatherData;
 use models::weather_data;
 
+
+use std::env;
+use dotenvy::dotenv;
+
+
+use reqwest::Error;
+
+
+use sea_orm::DatabaseConnection;
+use sea_orm::Database;
+use sea_orm::ActiveValue::{Set};
+use sea_orm::ActiveModelTrait;
+
+
+
+
+
 #[derive(Debug)]
 enum AppError {
-    //DatabaseError(sqlx::Error),
     HttpRequestError(reqwest::Error),
     DatabaseError(sea_orm::DbErr),
-    // Other errors...
 }
 
-// impl From<sqlx::Error> for AppError {
-//     fn from(err: sqlx::Error) -> Self {
-//         AppError::DatabaseError(err)
-//     }
-// }
 
 impl From<reqwest::Error> for AppError {
     fn from(err: reqwest::Error) -> Self {
@@ -53,14 +54,17 @@ impl From<sea_orm::DbErr> for AppError {
  #[tokio::main]
 async fn main() -> Result<(), AppError> {
 
-    let current_dir = env::current_dir().unwrap();
-    //println!("Current directory: {}", current_dir.display());
+    
 
-    let pull_conf :WeatherPullConf = load_config("weather-pull-conf.json".to_string());
+    let pull_conf :WeatherPullConf = load_config("/workspace/src/test-data/weather-pull-conf.json".to_string());
 
     let targets = randomize_target_list(pull_conf);
 
 
+    // this line only needs to be here if using separate .env file
+    dotenv().ok();
+
+    // Get the environment variables
     let mysql_host = env::var("DB_HOST").expect("DB_HOST not set");
     let mysql_user = env::var("DB_USER").expect("MYSQL_USER not set");
     let mysql_password = env::var("DB_PASS").expect("DB_PASS not set");
@@ -69,16 +73,13 @@ async fn main() -> Result<(), AppError> {
 
     // Construct the MySQL connection URL
     let database_url = format!("mysql://{}:{}@{}/{}", mysql_user, mysql_password, mysql_host, mysql_database);
-    // mysql://admin:password@weather-results.cz6gyqqeadbq.us-east-2.rds.amazonaws.com/weather
 
 
-    // collection of WeatherData structs
-    // let mut data_list: Vec<WeatherData> = Vec::new();
 
 
-    // Create a connection pool
-    //let pool = MySqlPool::connect(&database_url).await?;
+    // Create a connection to the database using the connection URL
     let db: DatabaseConnection = Database::connect(&database_url).await?;
+
 
     println!("Starting API call");
     let requests: Vec<WorkList> = targets.iter().map(|x|
@@ -141,16 +142,6 @@ async fn main() -> Result<(), AppError> {
             Err(e) => println!("Error: {}", e),
         }
     }
-
-
-    // for data in data_list {
-    //     insert_weather_data(&db, &data).await?;
-    // }
-
-    
-    
-
-
     Ok(())
 }
 
