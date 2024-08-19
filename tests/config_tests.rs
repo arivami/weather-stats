@@ -1,27 +1,65 @@
-mod common;
+use weather_stats::config::config::*;
+use std::fs;
 
-use config;
+fn setup() -> WeatherPullConf {
+    let result = WeatherPullConf {
+        targets: vec![
+            CityCluster {
+                city_name: "San Jose".to_string(),
+                zips: vec!["95124".to_string(), "95014".to_string(), "95123".to_string()],
+            },
+            CityCluster {
+                city_name: "Los Angeles".to_string(),
+                zips: vec!["90046".to_string(), "90291".to_string()],
+            },
+        ],
+        time_offsets: vec![4, 8, 12, 16, 20, 24],
+    };
+    result
+}
+
+
 
 
 #[test]
 fn test_load_config() {
-    let pull_conf = config::config::load_config("/workspace/src/test-data/weather-pull-conf.json".to_string());
-    assert_eq!(pull_conf.target_list.len(), 2);
-    assert_eq!(pull_conf.target_list[0].zip, "12345");
-    assert_eq!(pull_conf.target_list[0].url, "http://api.openweathermap.org/data/2.5/weather");
-    assert_eq!(pull_conf.target_list[1].zip, "54321");
-    assert_eq!(pull_conf.target_list[1].url, "http://api.openweathermap.org/data/2.5/weather");
+    let expected = setup();
+    let temp_dir = std::env::temp_dir();
+    let temp_file_path = temp_dir.join("test_config.json");
+    let file = r#"
+    {
+        "targets": [
+        {
+            "city_name": "San Jose",
+            "zips": ["95124", "95014", "95123"]
+        },
+        {
+            "city_name": "Los Angeles",
+            "zips": ["90046", "90291"]
+        }],
+        "time_offsets": [4, 8, 12, 16, 20, 24]
+    }
+    "#;
+
+    fs::write(&temp_file_path, file).expect("Failed to write to temp file");
+
+    let result = load_config(temp_file_path.to_str().unwrap().to_string());
+
+    assert_eq!(result.targets[0].city_name, expected.targets[0].city_name);
+    assert_eq!(result.targets[0].zips, expected.targets[0].zips);
+    assert_eq!(result.targets[1].city_name, expected.targets[1].city_name);
+    assert_eq!(result.targets[1].zips, expected.targets[1].zips);
+    assert_eq!(result.time_offsets, expected.time_offsets);
 }
 
 
 #[test]
 fn test_randomize_target_list() {
-    let mut pull_conf = config::config::load_config("/workspace/src/test-data/weather-pull-conf.json".to_string());
-    let mut target_list = pull_conf.target_list.clone();
-    let randomized_list = config::config::randomize_target_list(&mut target_list);
-    assert_eq!(randomized_list.len(), 2);
-    assert_eq!(randomized_list[0].zip, "54321");
-    assert_eq!(randomized_list[0].url, "http://api.openweathermap.org/data/2.5/weather");
-    assert_eq!(randomized_list[1].zip, "12345");
-    assert_eq!(randomized_list[1].url, "http://api.openweathermap.org/data/2.5/weather");
+    let area1 = vec!["95124".to_string(), "95014".to_string(), "95123".to_string()];
+    let area2 = vec!["90046".to_string(), "90291".to_string()];
+    let result = randomize_target_list(setup());
+
+    assert_eq!(result.len(), 2);
+    assert_eq!((area1.contains(&result[0]) && area2.contains(&result[1])) || (area2.contains(&result[0]) && area1.contains(&result[1])), true);
+
 }
