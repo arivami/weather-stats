@@ -59,12 +59,9 @@ async fn main() -> Result<(), AppError> {
     for response in target_data {
         match response {
             Ok(ri) => {
-                println!("City:{}", ri.weather.name);
-                println!("Zip:{}", ri.zip);
-                println!("Temperature: {}", ri.weather.main.temp);
-                println!("Weather: {}", ri.weather.weather[0].description);
-                println!("Humidity: {}%", ri.weather.main.humidity);
-                println!("Wind Speed: {} m/s", ri.weather.wind.speed);
+                println!("City:{}, Zip:{}, Temperature: {}", ri.weather.name, ri.zip, ri.weather.main.temp);
+                println!("Weather: {}, Humidity: {}%, Wind Speed: {} m/s", ri.weather.weather[0].description, 
+                    ri.weather.main.humidity, ri.weather.wind.speed);
                 println!();
 
 

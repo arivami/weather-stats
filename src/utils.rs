@@ -27,10 +27,12 @@ pub mod helper_funcs{
     }
 
     pub async fn connect_to_db(url:String)->sea_orm::DatabaseConnection {
+        println!("Connecting to the database");
         sea_orm::Database::connect(&url).await.unwrap()
     }
 
     pub async fn get_zip_data(zip:String, api_key:String)->Result<ResponseItem, reqwest::Error> {
+        println!("Requesting data from API");
         let url = format!("http://api.openweathermap.org/data/2.5/weather?zip={}&appid={}&units={}", zip, api_key, "imperial");
         let response = reqwest::get(url).await?;
         let resp_item: ResponseItem= ResponseItem{
