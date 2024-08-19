@@ -14,8 +14,6 @@ use weather_stats::db_actions::db_actions::*;
 
 
 // External
-
-use std::env;
 use dotenvy::dotenv;
 
 
@@ -25,8 +23,6 @@ use dotenvy::dotenv;
 
  #[tokio::main]
 async fn main() -> Result<(), AppError> {
-
-    
 
     let pull_conf :WeatherPullConf = load_config("/workspace/src/test-data/weather-pull-conf.json".to_string());
 

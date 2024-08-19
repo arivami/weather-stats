@@ -1,6 +1,8 @@
 use weather_stats::utils::helper_funcs::*;
 use weather_stats::openweathermap::open_weather_data::*;
 
+use dotenvy::dotenv;
+
 
 fn setup() ->  EnvVars {
     let result = EnvVars {
@@ -15,6 +17,7 @@ fn setup() ->  EnvVars {
 
 #[test]
 fn test_get_env_vars() {
+    dotenv().ok();
     let host = std::env::var("DB_HOST").expect("DB_HOST not set");
     let user = std::env::var("DB_USER").expect("DB_USER not set");
     let password = std::env::var("DB_PASS").expect("DB_PASS not set");

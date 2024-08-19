@@ -4,6 +4,9 @@ pub mod helper_funcs{
 
     use crate::openweathermap::open_weather_data::ResponseItem;
 
+
+    use dotenvy::dotenv;
+
     #[derive(Debug)]
     pub struct EnvVars {
         pub host:String,
@@ -14,6 +17,7 @@ pub mod helper_funcs{
     }
 
     pub fn get_env_vars() -> EnvVars {
+        dotenv().ok();
         let host = std::env::var("DB_HOST").expect("DB_HOST not set");
         let user = std::env::var("DB_USER").expect("DB_USER not set");
         let password = std::env::var("DB_PASS").expect("DB_PASS not set");
@@ -38,7 +42,6 @@ pub mod helper_funcs{
         let resp_item: ResponseItem= ResponseItem{
             zip:zip.to_lowercase(), weather: response.json().await?,
         };
-        println!("Response: {:?}", resp_item);
         Ok(resp_item)
     }
 
