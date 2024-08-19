@@ -2,15 +2,15 @@
 pub mod helper_funcs{
     use futures::future::join_all;
 
-    use crate::openweathermap::{self, open_weather_data::ResponseItem};
+    use crate::openweathermap::open_weather_data::ResponseItem;
 
     #[derive(Debug)]
     pub struct EnvVars {
-        host:String,
-        user:String,
-        password:String,
-        database:String,
-        api_key:String,
+        pub host:String,
+        pub user:String,
+        pub password:String,
+        pub database:String,
+        pub api_key:String,
     }
 
     pub fn get_env_vars() -> EnvVars {

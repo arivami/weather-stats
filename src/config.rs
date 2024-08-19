@@ -9,14 +9,14 @@ pub mod config {
 
     #[derive(Serialize, Deserialize, Debug)]
     pub struct CityCluster{
-        city_name:String,
-        zips:Vec<String>,
+        pub city_name:String,
+        pub zips:Vec<String>,
     }
 
     #[derive(Serialize, Deserialize, Debug)]
     pub struct WeatherPullConf {
-        targets:Vec<CityCluster>,
-        time_offsets:Vec<i32>,
+        pub targets:Vec<CityCluster>,
+        pub time_offsets:Vec<i32>,
     }
 
     pub fn load_config(file_name:String) -> WeatherPullConf {
