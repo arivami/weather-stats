@@ -24,7 +24,7 @@ use dotenvy::dotenv;
  #[tokio::main]
 async fn main() -> Result<(), AppError> {
 
-    let pull_conf :WeatherPullConf = load_config("/workspace/src/test-data/weather-pull-conf.json".to_string());
+    let pull_conf :WeatherPullConf = load_config("weather-pull-conf.json".to_string());
 
     let targets = randomize_target_list(pull_conf);
 
