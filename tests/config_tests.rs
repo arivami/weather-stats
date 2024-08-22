@@ -4,12 +4,12 @@ use std::fs;
 fn setup() -> WeatherPullConf {
     let result = WeatherPullConf {
         targets: vec![
-            CityCluster {
-                city_name: "San Jose".to_string(),
+            AreaCluster {
+                area_name: "San Jose".to_string(),
                 zips: vec!["95124".to_string(), "95014".to_string(), "95123".to_string()],
             },
-            CityCluster {
-                city_name: "Los Angeles".to_string(),
+            AreaCluster {
+                area_name: "Los Angeles".to_string(),
                 zips: vec!["90046".to_string(), "90291".to_string()],
             },
         ],
@@ -30,11 +30,11 @@ fn test_load_config() {
     {
         "targets": [
         {
-            "city_name": "San Jose",
+            "area_name": "San Jose",
             "zips": ["95124", "95014", "95123"]
         },
         {
-            "city_name": "Los Angeles",
+            "area_name": "Los Angeles",
             "zips": ["90046", "90291"]
         }],
         "time_offsets": [4, 8, 12, 16, 20, 24]
@@ -45,9 +45,9 @@ fn test_load_config() {
 
     let result = load_config(temp_file_path.to_str().unwrap().to_string());
 
-    assert_eq!(result.targets[0].city_name, expected.targets[0].city_name);
+    assert_eq!(result.targets[0].area_name, expected.targets[0].area_name);
     assert_eq!(result.targets[0].zips, expected.targets[0].zips);
-    assert_eq!(result.targets[1].city_name, expected.targets[1].city_name);
+    assert_eq!(result.targets[1].area_name, expected.targets[1].area_name);
     assert_eq!(result.targets[1].zips, expected.targets[1].zips);
     assert_eq!(result.time_offsets, expected.time_offsets);
 }

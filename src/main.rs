@@ -24,9 +24,10 @@ use dotenvy::dotenv;
  #[tokio::main]
 async fn main() -> Result<(), AppError> {
 
-    let pull_conf :WeatherPullConf = load_config("weather-pull-conf.json".to_string());
+    // path to file needs to be different when doing testing
+    //let pull_conf :WeatherPullConf = load_config("/workspace/src/test-data/weather-pull-conf.json".to_string());
 
-    let targets = randomize_target_list(pull_conf);
+    //let targets = randomize_target_list(pull_conf);
 
 
     // this line only needs to be here if using separate .env file
@@ -44,9 +45,12 @@ async fn main() -> Result<(), AppError> {
     // connect to the database
     let db = connect_to_db(db_url).await;
 
+    let targets = load_config_db(&db).await;
+
 
   
-    let target_data = get_target_data(targets, api_key).await;
+    //let target_data = get_target_data(targets, api_key).await;
+    let target_data = get_target_data(targets.zips, api_key).await;
 
 
 

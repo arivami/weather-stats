@@ -1,7 +1,7 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
-#[sea_orm(table_name = "weather_data")]
+#[sea_orm(table_name = "WeatherStats")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i64,
