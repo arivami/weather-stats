@@ -9,6 +9,9 @@ NETWORK="my-net-2"
 MYSQL_CONTAINER_NAME=mysql-container
 APP_CONTAINER_NAME=app-container
 
+BRANCH_NAME="ari-main"
+IMAGE_NAME="app-image"
+
 # Stop and remove previous containers
 echo "Removing old network and containers..."
 docker stop $MYSQL_CONTAINER_NAME $APP_CONTAINER_NAME
