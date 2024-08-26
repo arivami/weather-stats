@@ -2,10 +2,10 @@
 
 # Env Variables
 export $(grep -v '^#' ../.env | xargs)
-DOCKERFILE="../DockerfileMulti"
+DOCKERFILE="../Dockerfile"
 
 # Define the network and container names
-NETWORK="my-net"
+NETWORK="my-net-2"
 MYSQL_CONTAINER_NAME=mysql-container
 APP_CONTAINER_NAME=app-container
 
