@@ -24,11 +24,6 @@ use dotenvy::dotenv;
  #[tokio::main]
 async fn main() -> Result<(), AppError> {
 
-    // path to file needs to be different when doing testing
-    //let pull_conf :WeatherPullConf = load_config("/workspace/src/test-data/weather-pull-conf.json".to_string());
-
-    //let targets = randomize_target_list(pull_conf);
-
 
     // this line only needs to be here if using separate .env file
     dotenv().ok();
