@@ -2,5 +2,6 @@ target/
 .git
 .gitignore
 .env
+.env.example
 Dockerfile.*
 scripts/
