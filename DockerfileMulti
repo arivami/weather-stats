@@ -17,10 +17,14 @@ FROM  rust:latest
 WORKDIR /workspace
 
 # Copy the compiled binary from the builder stage
-COPY --from=builder /workspace/target/release/weather-stats .
+COPY --from=builder /workspace/target/release/weather_stats .
 
 # Copy the test data file
 COPY --from=builder /workspace/src/test-data/weather-pull-conf.json .
 
+
+# Set RUST_BACKTRACE environment variable
+ENV RUST_BACKTRACE=1
+
 # Command to run the binary
-CMD ["./weather-stats"]
+CMD ["./weather_stats"]
