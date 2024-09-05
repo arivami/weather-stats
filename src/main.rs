@@ -17,7 +17,7 @@ use weather_stats::db_actions::db_actions::*;
 // External
 use dotenvy::dotenv;
 
-use flexi_logger::{Duplicate, Logger, WriteMode, FileSpec};
+use flexi_logger::{Duplicate, Logger, WriteMode, FileSpec, };
 use log::{info, warn, error, debug};
 
 
@@ -29,23 +29,15 @@ use log::{info, warn, error, debug};
 async fn main() {
 
 
-    Logger::try_with_str("debug")
+    let _logger = Logger::try_with_str("debug, hyper=off, sqlx=off")
     .unwrap()
-    .log_to_file(FileSpec::default()
-        .suppress_timestamp()
-        .directory("logs")
-    ) // Set up default file logging
-    .duplicate_to_stderr(Duplicate::All) // Duplicate all logs to stderr
-    .write_mode(WriteMode::BufferAndFlush) // Buffer logs and flush them periodically
+    .log_to_file(FileSpec::default().directory("logs")) // Set up default file logging
+    .duplicate_to_stdout(Duplicate::All) // Duplicate all logs to stderr
+    .write_mode(WriteMode::Async) // Buffer logs and flush them periodically
     .start()
     .unwrap();
 
-     
 
-
-
-    // this line only needs to be here if using separate .env file
-    //dotenv().ok();
 
     // get all environment variables
     let env_vars = get_env_vars().unwrap_or_else(|err| {
