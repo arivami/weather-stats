@@ -24,7 +24,7 @@ fn test_get_env_vars() {
     let database = std::env::var("DB_NAME").expect("DB_NAME not set");
     let api_key = std::env::var("API_KEY").expect("API_KEY not set");
 
-    let result = get_env_vars();
+    let result = get_env_vars().unwrap();
 
     assert_eq!(result.host, host);
     assert_eq!(result.user, user);
@@ -56,8 +56,7 @@ async fn test_connect_to_db() {
 #[tokio::test]
 async fn test_get_zip_data() {
     let zip = "95124".to_string();
-    let env_vars = get_env_vars();  
-    let api = env_vars.api_key;
+    let api = std::env::var("API_KEY").expect("API_KEY not set");
     let result = get_zip_data(zip, api).await.unwrap();
 
     let expected = ResponseItem {
@@ -82,8 +81,7 @@ async fn test_get_zip_data() {
 #[tokio::test]
 async fn test_get_target_data() {
     let target_list = vec!["95124".to_string(), "95014".to_string(), "95123".to_string()];
-    let env_vars = get_env_vars();
-    let api_key = env_vars.api_key;
+    let api_key = std::env::var("API_KEY").expect("API_KEY not set");
     let result = get_target_data(target_list, api_key).await;
 
     assert_eq!(result.len(), 3);
