@@ -32,9 +32,9 @@ You can run the service either locally for testing or in the cloud using AWS. Be
 1. Clone the repository.
 2. Ensure Docker is up and running on your machine.
 3. Set up environment variables:
-    - Use the provided `.env.example` file as a template.
-    - Configure any required variables in the `build.sh` script according to your local setup.
-4. Run the `build.sh` script to build and start the containers:
+    - Use the provided [.env.example](./.env.example) file as a template.
+    - Configure any required variables in the [build.sh](./scripts/build.sh) script according to your local setup.
+4. Run the [build.sh](./scripts/build.sh) script to build and start the containers:
     - Once the script completes, you will have two running containers: one for MySQL and one for the application.
     - *Note: Neither the service nor the DB run natively on your machine, local MySQL or Rust is not required.*
 5. Use the service:
@@ -57,7 +57,7 @@ You can run the service either locally for testing or in the cloud using AWS. Be
     - Connect to the instance.
     - From the instance terminal, connect to your MySQL DB.
 6. Clone the GitHub repository (keep the instance terminal open).
-7. Copy and paste all the SQL statements from `init.sql` into the instance terminal to initialize the database.
+7. Copy and paste all the SQL statements from [init.sql](./scripts/init.sql) into the instance terminal to initialize the database.
 8. Navigate back to **ECS**: 
     - Run the task
     - Check the results in the instance terminal by querying the DB.
