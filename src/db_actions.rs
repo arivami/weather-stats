@@ -12,11 +12,13 @@ pub mod db_actions {
 
     use crate::error_handling::AppError;
 
+    use log::info;
+
  
 
 
 
-    pub async fn insert_weather_data(db: &DatabaseConnection, data: &WeatherData) -> Result<(), AppError>{
+    pub async fn insert_weather_data(db: &DatabaseConnection, data: &WeatherData) -> Result<(), sea_orm::DbErr>{
         let current_weather: weather_data::ActiveModel = weather_data::ActiveModel {
             city: Set(data.city.clone()),
             zip: Set(data.zip.clone()),
@@ -27,9 +29,9 @@ pub mod db_actions {
             ..Default::default()
         };
         
-        println!("Inserting data into the database...");
+        info!("Inserting data into the database...");
         current_weather.insert(db).await?;
-        println!("Data inserted successfully");
+        info!("Data inserted successfully");
     
     
         Ok(())

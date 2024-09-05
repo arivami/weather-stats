@@ -9,27 +9,28 @@ pub mod config {
  
     use crate::models::targetzips;
 
+    use log::{info, debug};
+
     pub struct Zips {
         pub zips:Vec<String>,
     }
 
   
 
-    pub async fn load_config_db(db: &DatabaseConnection) -> Zips {
+    pub async fn load_config_db(db: &DatabaseConnection) -> Result<Zips, sea_orm::DbErr> {
         // get everything from the TargetZips table
-        println!("Getting target zips from the database");
+        info!("Getting target zips from the database");
         let zips = targetzips::Entity::find()
             .select_only()
             .column(targetzips::Column::ZipCode)
             .into_tuple::<String>()
             .all(db)
-            .await
-            .expect("Failed to retrieve zip codes from the TargetZips table");
+            .await?;
 
-        println!("Target zips retrieved from the database");
-        println!("{:?}", zips);
+        info!("Target zips retrieved from the database");
+        debug!("{:?}", zips);
 
-        Zips{zips}
+        Ok(Zips{zips})
             
     }
 
