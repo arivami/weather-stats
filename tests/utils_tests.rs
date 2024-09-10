@@ -1,9 +1,12 @@
+//! Tests for the helper_funcs module
 use weather_stats::utils::helper_funcs::*;
 use weather_stats::openweathermap::open_weather_data::*;
 
 use dotenvy::dotenv;
 
-
+/// Set up environment variables
+/// 
+/// A helper function to set up fake environment variables for testing.
 fn setup() ->  EnvVars {
     let result = EnvVars {
         host: "host".to_string(),
@@ -15,6 +18,10 @@ fn setup() ->  EnvVars {
     result
 }
 
+
+/// Test get_env_vars function
+/// 
+/// This test checks that the get_env_vars function returns a struct with correct information about environment variables.
 #[test]
 fn test_get_env_vars() {
     dotenv().ok();
@@ -33,26 +40,10 @@ fn test_get_env_vars() {
     assert_eq!(result.api_key, api_key);
 }
 
-#[test]
-fn test_get_db_url() {
-    let env_vars = setup();
-    let db_url = get_db_url(env_vars);
-    assert_eq!(db_url, "mysql://user:password@host/database");
-}
 
-#[tokio::test]
-#[ignore]
-async fn test_connect_to_db() {
-    // let env_vars = get_env_vars();
-    // let db_url = get_db_url(env_vars);
-    // let db = connect_to_db(db_url);
-
-
-    //assert!(db.ping().await.is_ok());
-    // db.clone().close().await;
-    // assert!(matches!(db.ping().await, Err(DbErr::ConnectionAcquire)));
-}
-
+/// Test get_zip_data function
+/// 
+/// This test checks that the get_zip_data function makes an API call and returns proper data.
 #[tokio::test]
 async fn test_get_zip_data() {
     let zip = "95124".to_string();
@@ -72,12 +63,12 @@ async fn test_get_zip_data() {
     assert_eq!(result.zip, expected.zip);
     assert_eq!(result.weather.name, expected.weather.name);
    
-    
-
-
-
 }
 
+
+/// Test get_target_data function
+/// 
+/// This test checks that the get_target_data function returns a vector of weather data for a list of zip codes.
 #[tokio::test]
 async fn test_get_target_data() {
     let target_list = vec!["95124".to_string(), "95014".to_string(), "95123".to_string()];

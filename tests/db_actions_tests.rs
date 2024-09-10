@@ -1,4 +1,4 @@
-
+//! Tests for the db_actions module
 #[cfg(test)]
 use sea_orm::{
     entity::prelude::*, entity::*,
@@ -6,11 +6,50 @@ use sea_orm::{
 };
 
 use weather_stats::models::weather_data;
+use weather_stats::utils::helper_funcs::EnvVars;
+use weather_stats::db_actions::db_actions::*;
 use chrono::Utc;
 
 
+/// Set up environment variables
+/// 
+/// A helper function to set up fake environment variables for testing.
+fn setup() ->  EnvVars {
+    let result = EnvVars {
+        host: "host".to_string(),
+        user: "user".to_string(),
+        password: "password".to_string(),
+        database: "database".to_string(),
+        api_key: "api_key".to_string(),
+    };
+    result
+}
 
 
+#[test]
+fn test_get_db_url() {
+    let env_vars = setup();
+    let db_url = get_db_url(env_vars);
+    assert_eq!(db_url, "mysql://user:password@host/database");
+}
+
+#[tokio::test]
+#[ignore]
+async fn test_connect_to_db() {
+    // let env_vars = get_env_vars();
+    // let db_url = get_db_url(env_vars);
+    // let db = connect_to_db(db_url);
+
+
+    //assert!(db.ping().await.is_ok());
+    // db.clone().close().await;
+    // assert!(matches!(db.ping().await, Err(DbErr::ConnectionAcquire)));
+}
+
+
+/// Test inserting data into database table
+/// 
+/// This test creates a mock database connection and inserts a row into the weather_data table.
 #[tokio::test]
 async fn test_insert_weather_data() {
 
