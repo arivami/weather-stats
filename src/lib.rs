@@ -1,3 +1,4 @@
+//! This file is for organizing the modules of the application.
 pub mod config;
 pub mod utils;
 pub mod openweathermap;
