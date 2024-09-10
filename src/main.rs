@@ -72,7 +72,6 @@ async fn main() {
 
 
   
-    //let target_data = get_target_data(targets, api_key).await;
     let target_data = get_target_data(targets.zips, api_key).await;
 
 
