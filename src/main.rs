@@ -1,9 +1,10 @@
+/// This is the main entry point of the application
 
-use futures::TryFutureExt;
+
 // Internal
 use weather_stats::config::config::*;
 
-use weather_stats::models::weather_str::WeatherData;
+use weather_stats::utils::helper_funcs::WeatherData;
 
 use weather_stats::utils::helper_funcs::*;
 
@@ -24,7 +25,12 @@ use log::{info, warn, error, debug};
 
 
 
-
+/// Main function
+/// 
+/// The main function sets up logging then performs weather data collection and inserts collected data into a database.
+/// 
+/// # Panics
+/// The main function will not panic. If an error occurs, the program will log the error and exit with a status code of 1.
  #[tokio::main]
 async fn main() {
 
