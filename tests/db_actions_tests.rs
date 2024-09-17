@@ -1,13 +1,12 @@
 //! Tests for the db_actions module
-use std::env;
 
-use dotenvy::dotenv;
 #[cfg(test)]
 use sea_orm::{
     entity::prelude::*, entity::*,
-    DatabaseBackend, MockDatabase, MockExecResult, DatabaseConnection,
+    DatabaseBackend, MockDatabase, MockExecResult,
 };
 
+use dotenvy::dotenv;
 use weather_stats::models::weather_data;
 use weather_stats::utils::helper_funcs::EnvVars;
 use weather_stats::db_actions::db_actions::*;

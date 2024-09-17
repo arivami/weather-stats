@@ -4,19 +4,6 @@ use weather_stats::openweathermap::open_weather_data::*;
 
 use dotenvy::dotenv;
 
-/// Set up environment variables
-/// 
-/// A helper function to set up fake environment variables for testing.
-fn setup() ->  EnvVars {
-    let result = EnvVars {
-        host: "host".to_string(),
-        user: "user".to_string(),
-        password: "password".to_string(),
-        database: "database".to_string(),
-        api_key: "api_key".to_string(),
-    };
-    result
-}
 
 
 /// Test get_env_vars function

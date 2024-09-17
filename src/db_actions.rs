@@ -11,7 +11,6 @@ pub mod db_actions {
     use crate::utils::helper_funcs::WeatherData;
     use crate::models::weather_data;
 
-    use crate::error_handling::AppError;
     use crate::utils::helper_funcs::EnvVars;
 
     use log::info;

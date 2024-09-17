@@ -8,18 +8,14 @@ use weather_stats::utils::helper_funcs::WeatherData;
 
 use weather_stats::utils::helper_funcs::*;
 
-use weather_stats::error_handling::AppError;
-
 use weather_stats::db_actions::db_actions::*;
 
 
 
 
 // External
-use dotenvy::dotenv;
-
 use flexi_logger::{Duplicate, Logger, WriteMode, FileSpec, };
-use log::{info, warn, error, debug};
+use log::{info, error, debug};
 
 
 
