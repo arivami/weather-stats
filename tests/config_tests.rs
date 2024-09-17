@@ -1,17 +1,10 @@
 use weather_stats::config::config::*;
-use std::fs;
-use log::error;
 
 use sea_orm::{
-    entity::prelude::*, entity::*,
-    DatabaseBackend, MockDatabase, MockExecResult, MockRow
+    DatabaseBackend, MockDatabase,
 };
 
 use sea_orm::DatabaseConnection;
-use sea_orm::EntityTrait;
-use sea_orm::QuerySelect;
-
-use weather_stats::models::weather_data;
 use weather_stats::models::targetzips;
 
 
