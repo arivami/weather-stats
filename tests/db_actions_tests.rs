@@ -1,8 +1,11 @@
 //! Tests for the db_actions module
+use std::env;
+
+use dotenvy::dotenv;
 #[cfg(test)]
 use sea_orm::{
     entity::prelude::*, entity::*,
-    DatabaseBackend, MockDatabase, MockExecResult,
+    DatabaseBackend, MockDatabase, MockExecResult, DatabaseConnection,
 };
 
 use weather_stats::models::weather_data;
@@ -34,17 +37,24 @@ fn test_get_db_url() {
 }
 
 #[tokio::test]
-#[ignore]
 async fn test_connect_to_db() {
-    // let env_vars = get_env_vars();
-    // let db_url = get_db_url(env_vars);
-    // let db = connect_to_db(db_url);
+    
+    dotenv().ok();
+    let host = std::env::var("DB_HOST").expect("DB_HOST not set");
+    let user = std::env::var("DB_USER").expect("DB_USER not set");
+    let password = std::env::var("DB_PASS").expect("DB_PASS not set");
+    let database = std::env::var("DB_NAME").expect("DB_NAME not set");
+    let env_vars = EnvVars {host,user,password,database, api_key:"".to_string()};
 
 
-    //assert!(db.ping().await.is_ok());
-    // db.clone().close().await;
-    // assert!(matches!(db.ping().await, Err(DbErr::ConnectionAcquire)));
+    let db_url = format!("mysql://{}:{}@{}/{}", env_vars.user, env_vars.password, env_vars.host, env_vars.database);
+    let db = connect_to_db(db_url).await.unwrap();
+
+     
+    assert_eq!(db.ping().await.is_ok(), true);
+
 }
+
 
 
 /// Test inserting data into database table
