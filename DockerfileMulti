@@ -1,0 +1,30 @@
+# Stage 1: Build the binary
+FROM rust:latest as builder
+
+# Set the working directory
+WORKDIR /workspace
+
+# Copy the source code
+COPY . /workspace
+
+# Compile the application
+RUN cargo build --release
+
+# Stage 2: Create the final image
+FROM  rust:latest
+
+# Set the working directory
+WORKDIR /workspace
+
+# Copy the compiled binary from the builder stage
+COPY --from=builder /workspace/target/release/weather_stats .
+
+# Copy the test data file
+COPY --from=builder /workspace/src/test-data/weather-pull-conf.json .
+
+
+# Set RUST_BACKTRACE environment variable
+ENV RUST_BACKTRACE=1
+
+# Command to run the binary
+CMD ["./weather_stats"]

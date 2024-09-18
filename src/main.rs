@@ -1,103 +1,104 @@
+/// This is the main entry point of the application
+
+
+// Internal
+use weather_stats::config::config::*;
+
+use weather_stats::utils::helper_funcs::WeatherData;
+
+use weather_stats::utils::helper_funcs::*;
+
+use weather_stats::db_actions::db_actions::*;
 
 
 
-/* use lambda_http::{run, service_fn, tracing, Body, Error, Request, RequestExt, Response};
 
-/// This is the main body for the function.
-/// Write your code inside it.
-/// There are some code example in the following URLs:
-/// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
-async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
-    // Extract some useful information from the request
-    let who = event
-        .query_string_parameters_ref()
-        .and_then(|params| params.first("name"))
-        .unwrap_or("world");
-    let message = format!("Hello {who}, this is an AWS Lambda HTTP request");
-
-    // Return something that implements IntoResponse.
-    // It will be serialized to the right response event automatically by the runtime
-    let resp = Response::builder()
-        .status(200)
-        .header("content-type", "text/html")
-        .body(message.into())
-        .map_err(Box::new)?;
-    Ok(resp)
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Error> {
-    tracing::init_default_subscriber();
-    
-    run(service_fn(function_handler)).await
-}
- */
-
- mod utils;
- mod openweathermap;
- mod config;
-
- use config::config::{load_config, randomize_target_list, WeatherPullConf};
- 
- use openweathermap::open_weather_data::ResponseItem;
-use reqwest::Error;
- //use futures::future::join_all;
- use crate::openweathermap::open_weather_data::{Weather,APIRequestParams,WorkList};
+// External
+use flexi_logger::{Duplicate, Logger, WriteMode, FileSpec, };
+use log::{info, error, debug};
 
 
+
+
+
+/// Main function
+/// 
+/// The main function sets up logging then performs weather data collection and inserts collected data into a database.
+/// 
+/// # Panics
+/// The main function will not panic. If an error occurs, the program will log the error and exit with a status code of 1.
  #[tokio::main]
-async fn main() -> Result<(), Error> {
-
-    let pull_conf :WeatherPullConf = load_config("/Users/mikez/Projects/weather-stats/src/test-data/weather-pull-conf.json".to_string());
-
-    let targets = randomize_target_list(pull_conf);
-
-    let requests: Vec<WorkList> = targets.iter().map(|x|
-        {
-            let request_params = APIRequestParams{
-                zip: x.to_string(),
-                api_key:"5ffce5e80bb83c6f974df8aeb9542960".to_string(),
-                unit:"imperial".to_string()
-
-                };
-            let url = format!(
-                    "http://api.openweathermap.org/data/2.5/weather?zip={}&appid={}&units={}",
-                    request_params.zip, request_params.api_key, request_params.unit
-                );
-            WorkList{zip: request_params.zip, url: url}         
-    } 
-    ).collect();
+async fn main() {
 
 
-      let responses: Vec<Result<ResponseItem, Error>> = futures::future::join_all(
-        requests.into_iter().map(|x| {
-            async move {
-                let response = reqwest::get(x.url).await?;
-                let resp_item: ResponseItem= ResponseItem{
-                    zip:x.zip.to_lowercase(), weather: response.json().await?,
-                };
-                Ok(resp_item)
-            }
-        })
-    ).await;
+    let _logger = Logger::try_with_str("debug, hyper=off, sqlx=off")
+    .unwrap()
+    .log_to_file(FileSpec::default().directory("logs")) // Set up default file logging
+    .duplicate_to_stdout(Duplicate::All) // Duplicate all logs to stderr
+    .write_mode(WriteMode::Async) // Buffer logs and flush them periodically
+    .start()
+    .unwrap();
 
- for response in responses {
-    match response {
-        Ok(ri) => {
-            println!("City:{}", ri.weather.name);
-            println!("Zip:{}", ri.zip);
-            println!("Temperature: {}", ri.weather.main.temp);
-            println!("Weather: {}", ri.weather.weather[0].description);
-            println!("Humidity: {}%", ri.weather.main.humidity);
-            println!("Wind Speed: {} m/s", ri.weather.wind.speed);
-            println!();
-        },
-        Err(e) => println!("Error: {}", e),
-    }
-}
+
+
+    // get all environment variables
+    let env_vars = get_env_vars().unwrap_or_else(|err| {
+        error!("Failed to get environment variables: {}", err);
+        std::process::exit(1);
+    });
+
+
+    let api_key = env_vars.api_key.clone();
+    
+
+    // construct the database url
+    let db_url = get_db_url(env_vars);
+
+
+    // connect to the database
+    let db = connect_to_db(db_url).await.unwrap_or_else(|err| {
+            error!("Failed to connect to the database: {}", err);
+            std::process::exit(1);
+        });
+
+    let targets = load_config_db(&db).await.unwrap_or_else(|err| {
+        error!("Failed to load target zips from the database: {}", err);
+        std::process::exit(1);
+    });
+
+
+  
+    let target_data = get_target_data(targets.zips, api_key).await;
+
+
 
     
 
+    for response in target_data {
+        match response {
+            Ok(ri) => {
+                debug!("City:{}, Zip:{}, Temperature: {}", ri.weather.name, ri.zip, ri.weather.main.temp);
+                debug!("Weather: {}, Humidity: {}%, Wind Speed: {} m/s", ri.weather.weather[0].description, 
+                    ri.weather.main.humidity, ri.weather.wind.speed);
 
-    Ok(())
+
+                let data = WeatherData::new(
+                    ri.weather.name,
+                    ri.zip,
+                    ri.weather.main.temp,
+                    ri.weather.weather[0].description.clone(),
+                    format!("{}%", ri.weather.main.humidity),
+                    ri.weather.wind.speed
+                );
+
+                insert_weather_data(&db, &data).await.unwrap_or_else(|err| {
+                    error!("Failed to insert data into the database: {}", err);
+                    info!("Proceeding to next record");
+                });
+                
+            },
+            Err(e) => error!("Failed to get data from the API: {}", e),
+        }
+    }
+    
 }

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":["APIRequestParams","Main","ResponseItem","Weather","WeatherDescription","Wind","WorkList"]};

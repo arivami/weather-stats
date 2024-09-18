@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["config","db_actions","error_handling","models","openweathermap","utils"]};

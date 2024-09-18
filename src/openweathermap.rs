@@ -1,5 +1,5 @@
 
-
+//! This module containes structs to store the input parameters and the response from the OpenWeatherMap API.
 pub mod open_weather_data {
    
     use serde::Deserialize;
@@ -40,6 +40,7 @@ pub mod open_weather_data {
         pub unit: String,
     }
 
+    #[derive(Debug)]
     pub struct ResponseItem{
         pub zip:String,
         pub weather:Weather,

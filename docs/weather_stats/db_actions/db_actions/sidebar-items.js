@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["connect_to_db","get_db_url","insert_weather_data"]};
