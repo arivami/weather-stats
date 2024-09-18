@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["areas","targetzips","users","userzips","weather_data"]};
