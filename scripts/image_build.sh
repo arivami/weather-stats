@@ -1,7 +1,7 @@
-export $(grep -v '^#' ../.env | xargs)
+#export $(grep -v '^#' ../.env | xargs)
 DOCKERFILE="../DockerfileMulti"
 
-BRANCH_NAME="ari-main-2"
+BRANCH_NAME="main"
 IMAGE_NAME="app-image"
 
 

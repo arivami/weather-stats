@@ -19,8 +19,6 @@ WORKDIR /workspace
 # Copy the compiled binary from the builder stage
 COPY --from=builder /workspace/target/release/weather_stats .
 
-# Copy the test data file
-COPY --from=builder /workspace/src/test-data/weather-pull-conf.json .
 
 
 # Set RUST_BACKTRACE environment variable
