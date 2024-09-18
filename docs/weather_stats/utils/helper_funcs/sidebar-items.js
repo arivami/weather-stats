@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_env_vars","get_target_data","get_zip_data"],"struct":["EnvVars","WeatherData"]};
